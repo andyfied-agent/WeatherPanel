@@ -1,0 +1,50 @@
+{
+  "board": {
+    "name": "ESP32-S3-Touch-LCD-3.49",
+    "variant": "V2",
+    "fqbn": "esp32:esp32:esp32s3",
+    "processor": "ESP32-S3R8",
+    "flash_size_mb": 16,
+    "psram_size_mb": 8,
+    "psram_type": "octal",
+    "partition_scheme": "huge_app"
+  },
+  "display": {
+    "controller": "AXS15231B",
+    "width": 172,
+    "height": 640,
+    "interface": "QSPI",
+    "rotation": 0,
+    "ips": false,
+    "reset": 46,
+    "backlight": 46
+  },
+  "qspi": {
+    "cs": 45,
+    "sck": 47,
+    "d0": 39,
+    "d1": 48,
+    "d2": 40,
+    "d3": 21,
+    "shared_interface": true
+  },
+  "touch": {
+    "interface": "I2C",
+    "sda": 4,
+    "scl": 8,
+    "interrupt": 1,
+    "address": "0x38"
+  },
+  "sd_mmc": {
+    "mode": "1-bit",
+    "cs": 38,
+    "clock": 41,
+    "command": 39,
+    "data0": 40
+  },
+  "weather_sources": {
+    "photo": "HKO",
+    "radar": "HKO",
+    "satellite": "HKO"
+  }
+}

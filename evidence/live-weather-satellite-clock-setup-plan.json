@@ -1,0 +1,1300 @@
+{
+  "project_title": "Live Weather Satellite Image Clock - Installation and Setup Plan",
+  "version": "1.0.0",
+  "hardware_requirements": {
+    "main_components": [
+      {
+        "component": "ESP32-S3-Touch-LCD-3.49 Display Board",
+        "description": "Main development board with integrated touchscreen and display",
+        "variations": [
+          "ESP32-S3-Touch-LCD-3.49 (with 18650 battery)",
+          "ESP32-S3-Touch-LCD-3.49-EN (without battery)",
+          "ESP32-S3-Touch-LCD-3.49B (with LiPo battery)",
+          "ESP32-S3-Touch-LCD-3.49B-EN (without battery)"
+        ],
+        "sku_numbers": {
+          "with_battery_case_a": "32373",
+          "without_battery_case_a": "32374",
+          "with_battery_case_b": "32375",
+          "without_battery_case_b": "32376"
+        }
+      },
+      {
+        "component": "Power Supply",
+        "options": [
+          "USB Type-C (5V, 2A recommended)",
+          "Lithium battery (18650 or LiPo)",
+          "External 5V power adapter"
+        ]
+      },
+      {
+        "component": "MicroSD Card (Optional)",
+        "description": "For storing images, fonts, and offline resources",
+        "recommended_capacity": "16GB-64GB",
+        "format": "FAT32"
+      },
+      {
+        "component": "External Antenna (Optional)",
+        "description": "For improved WiFi signal via IPEX connector",
+        "connector_type": "IPEX 1"
+      }
+    ],
+    "technical_specifications": {
+      "display": {
+        "size": "3.49 inches",
+        "resolution": "172 x 640 pixels (portrait)",
+        "display_type": "IPS LCD",
+        "colors": "16.7M (24-bit)",
+        "brightness": "350 cd/m²",
+        "contrast_ratio": "1200:1",
+        "interface": "QSPI",
+        "driver_ic": "AXS15231B"
+      },
+      "touch": {
+        "type": "Capacitive touchscreen",
+        "interface": "I2C",
+        "controller": "Integrated with display driver"
+      },
+      "microcontroller": {
+        "chip": "ESP32-S3R8",
+        "cpu": "Xtensa 32-bit LX7 dual-core",
+        "frequency": "240 MHz",
+        "flash": "16MB",
+        "psram": "8MB OPI PSRAM",
+        "wifi": "802.11 b/g/n (2.4 GHz)",
+        "bluetooth": "Bluetooth 5 (LE)"
+      },
+      "additional_features": [
+        "QMI8658 6-axis IMU (accelerometer + gyroscope)",
+        "PCF85063 RTC chip",
+        "ES8311 Audio DAC",
+        "ES7210 Audio ADC (dual microphone array)",
+        "MicroSD card slot",
+        "PWR and BOOT buttons",
+        "Lithium battery charging circuit (MX1.25 connector)"
+      ]
+    },
+    "pin_connections": {
+      "note": "The ESP32-S3-Touch-LCD-3.49 is an all-in-one board. Most connections are pre-made. External module connections use the 22-pin 2.54mm pitch header.",
+      "display_qspi_interface": {
+        "interface": "QSPI (Quad SPI)",
+        "pins": "Pre-connected on-board",
+        "clock_pin": "GPIO 47 (internal routing)",
+        "data_pins": "GPIO 21, 48, 40, 39 (internal routing)",
+        "cs_pin": "GPIO 45 (internal routing)",
+        "reset_pin": "Pre-routed to display reset"
+      },
+      "touch_i2c_interface": {
+        "interface": "I2C",
+        "sda_pin": "GPIO 4",
+        "scl_pin": "GPIO 8",
+        "int_pin": "GPIO 3 (V2 only)",
+        "address": "0x3B (typical)"
+      },
+      "i2c_expander": {
+        "chip": "TCA9554PWR",
+        "purpose": "8-bit I2C GPIO expander",
+        "usage": "Buttons, LEDs, and additional I/O"
+      },
+      "22pin_expansion_header": {
+        "purpose": "External module connections",
+        "pitch": "2.54mm",
+        "pinout_guide": "Refer to Waveshare schematic for complete pinout",
+        "common_uses": [
+          "External sensors (I2C/SPI/UART)",
+          "Camera module (OV5640/OV2640)",
+          "Additional displays",
+          "Power control circuits"
+        ]
+      },
+      "audio_connections": {
+        "speaker_header": "MX1.25 2PIN on back side",
+        "microphones": "Dual digital microphone array (on-board)",
+        "codec": "ES8311 DAC, ES7210 ADC"
+      },
+      "battery_charging": {
+        "connector": "MX1.25 2PIN",
+        "battery_type": "3.7V Lithium (18650 or LiPo)",
+        "charging_circuit": "PCF85063 RTC + charging IC"
+      }
+    },
+    "version_differences": {
+      "v1_vs_v2": {
+        "v1_discontinued": true,
+        "identification": {
+          "pcb_silkscreen_v2": "Rev1.1 marking",
+          "case_qc_label_v2": "V2 label"
+        },
+        "differences": [
+          "V2 exposes TP_INT pin (GPIO 3)",
+          "V2 optimized lithium battery charging current",
+          "V2 swapped LCD_TE and LCD_RESET pins",
+          "V2 swapped LCD_BL and EXIO_INT pins"
+        ],
+        "warning": "Use firmware examples for correct version; incorrect version may result in screen not turning on"
+      }
+    }
+  },
+  "software_setup": {
+    "development_options": [
+      {
+        "option": "ESP-IDF (Recommended for Production)",
+        "description": "Official Espressif development framework with full hardware support",
+        "advantages": [
+          "Complete hardware abstraction layer (BSP)",
+          "Best performance and power management",
+          "Native LVGL support via esp_lvgl_port",
+          "Advanced debugging capabilities",
+          "Better memory management for QSPI displays"
+        ],
+        "prerequisites": {
+          "os": [
+            "Windows 10/11 (with WSL2 recommended)",
+            "Linux (Ubuntu 20.04+ recommended)",
+            "macOS 12+"
+          ],
+          "tools": [
+            "Git",
+            "CMake >= 3.16",
+            "Ninja",
+            "Python 3.8+",
+            "ESP-IDF Extension for VS Code (recommended)"
+          ]
+        },
+        "installation_steps": [
+          "Install ESP-IDF v5.2+ using install-espidf script",
+          "Configure VS Code with ESP-IDF Extension",
+          "Select target: ESP32-S3",
+          "Add component registry for AXS15231B driver",
+          "Clone ESP-IDF examples or create new project"
+        ],
+        "project_structure": {
+          "components": [
+            "esp_lcd_axs15231b (display driver)",
+            "esp_lvgl_port (LVGL integration)",
+            "esp_netinet (WiFi networking)",
+            "custom weather_panel component"
+          ],
+          "main_directory": "src/",
+          "config_files": [
+            "sdkconfig",
+            "CMakeLists.txt",
+            "lv_conf.h"
+          ]
+        }
+      },
+      {
+        "option": "Arduino IDE (Easier for Beginners)",
+        "description": "User-friendly IDE with extensive library support",
+        "advantages": [
+          "Simpler setup process",
+          "Large community support",
+          "Extensive library ecosystem",
+          "Quick prototyping capability"
+        ],
+        "prerequisites": {
+          "os": [
+            "Windows 7+",
+            "macOS 10.13+",
+            "Linux"
+          ],
+          "tools": [
+            "Arduino IDE 2.0+"
+          ]
+        },
+        "installation_steps": [
+          "Install Arduino IDE 2.0+",
+          "Add ESP32 board manager URL: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json",
+          "Install ESP32 board package",
+          "Install required libraries via Library Manager",
+          "Configure board settings",
+          "Install WeatherPanel and dependencies"
+        ],
+        "board_configuration": {
+          "board": "ESP32S3 Dev Module",
+          "upload_speed": "921600",
+          "usb_mode": "Hardware CDC and JTAG",
+          "usb_cdc_on_boot": "Enabled",
+          "cpu_frequency": "240 MHz (WiFi)",
+          "flash_mode": "QIO 80 MHz",
+          "flash_size": "16 MB (128Mb)",
+          "partition_scheme": "16M Flash (3MB APP/9.9MB FATFS)",
+          "psram": "OPI PSRAM",
+          "flash_type": "QIO/OPI"
+        }
+      }
+    ],
+    "arduino_setup_details": {
+      "board_manager_url": "https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json",
+      "board_selection": "ESP32S3 Dev Module",
+      "libraries_to_install": [
+        {
+          "name": "Arduino_GFX",
+          "author": "moononournation",
+          "version": "Latest",
+          "purpose": "Display graphics library supporting QSPI interfaces"
+        },
+        {
+          "name": "LVGL",
+          "author": "LVGL",
+          "version": "8.3.0 (recommended for compatibility)",
+          "purpose": "Lightweight graphics library for UI"
+        },
+        {
+          "name": "Arduino_JSON",
+          "author": "Bblanchon",
+          "version": "7.x",
+          "purpose": "JSON parsing for weather API responses"
+        },
+        {
+          "name": "HTTPClient",
+          "author": "Espressif",
+          "version": "Built-in",
+          "purpose": "HTTP requests for weather data"
+        },
+        {
+          "name": "Time",
+          "author": "Paul Stoffregen",
+          "version": "Latest",
+          "purpose": "Time synchronization and NTP"
+        },
+        {
+          "name": "NTPClient",
+          "author": "Colin J. Williams",
+          "version": "Latest",
+          "purpose": "Network Time Protocol client"
+        },
+        {
+          "name": "WiFi",
+          "author": "Espressif",
+          "version": "Built-in",
+          "purpose": "WiFi connectivity"
+        }
+      ],
+      "lv_conf_customization": {
+        "location": "Copy lv_conf.h from project lib/ to Arduino libraries directory",
+        "required_settings": {
+          "LV_COLOR_DEPTH": "16",
+          "LV_HOR_RES_MAX": "172",
+          "LV_VER_RES_MAX": "640",
+          "LV_MEM_SIZE": "64 * 1024 (64KB)",
+          "LV_DISP_DEF_REFR_PERIOD": "30",
+          "LV_TICK_CUSTOM": "1",
+          "LV_TICK_CUSTOM_INCLUDE": "\"Arduino.h\"",
+          "LV_TICK_CUSTOM_SYS_TIME_EXPR": "millis()",
+          "LV_COLOR_16_SWAP": "1 (for QSPI)",
+          "LV_MEM_CUSTOM": "1",
+          "LV_MEM_CUSTOM_INCLUDE": "<esp32-hal-psram.h>",
+          "LV_MEM_CUSTOM_ALLOC": "ps_malloc",
+          "LV_MEM_CUSTOM_FREE": "free"
+        }
+      },
+      "qspi_pin_mapping": {
+        "description": "Pin definitions for Arduino_GFX with AXS15231B",
+        "tft_qspi_cs": "12 (or 45 depending on version)",
+        "tft_qspi_sck": "17 (or 47 depending on version)",
+        "tft_qspi_d0": "13 (or 21 depending on version)",
+        "tft_qspi_d1": "18 (or 48 depending on version)",
+        "tft_qspi_d2": "21 (or 40 depending on version)",
+        "tft_qspi_d3": "14 (or 39 depending on version)",
+        "tft_qspi_rst": "16",
+        "tft_bl": "1 (backlight control)"
+      }
+    },
+    "esp_idf_setup_details": {
+      "idf_version": "5.2+",
+      "required_components": [
+        {
+          "component": "esp_lcd",
+          "purpose": "LCD display driver framework",
+          "specific_driver": "esp_lcd_axs15231b"
+        },
+        {
+          "component": "esp_lvgl_port",
+          "purpose": "LVGL integration layer"
+        },
+        {
+          "component": "esp_net",
+          "purpose": "Network stack"
+        },
+        {
+          "component": "esp_http_client",
+          "purpose": "HTTP client for API calls"
+        },
+        {
+          "component": "esp_tls",
+          "purpose": "TLS/SSL support"
+        },
+        {
+          "component": "json",
+          "purpose": "JSON parsing"
+        }
+      ],
+      "menuconfig_settings": {
+        "target": "ESP32-S3",
+        "psram": "Octal PSRAM (8MB)",
+        "flash": "16MB",
+        "flash_mode": "QIO",
+        "flash_freq": "80MHz",
+        "cpu_freq_mhz": "240",
+        "wifi_power_output_db": "Configurable",
+        "ble_enabled": "Yes (if needed)"
+      },
+      "qspi_bus_config": {
+        "host_id": "SPI2_HOST (or SPI3_HOST)",
+        "clk_pin": "GPIO 47",
+        "data_pins": ["GPIO 21", "GPIO 48", "GPIO 40", "GPIO 39"],
+        "cs_pin": "GPIO 45",
+        "dout_pin": "GPIO 21",
+        "din_pin": "GPIO 48",
+        "cmd_pin": "GPIO 47 (PCLK)",
+        "addr_pin": "GPIO 40",
+        "quadline_mode": true
+      }
+    },
+    "compilation_and_upload": {
+      "arduino_ide": {
+        "steps": [
+          "Open WeatherPanel example in Arduino IDE",
+          "Configure board settings as specified above",
+          "Select COM port (appears when board is connected)",
+          "Click Upload button",
+          "Wait for compilation and upload (may take 2-5 minutes)",
+          "Open Serial Monitor (115200 baud) to view output"
+        ],
+        "troubleshooting": [
+          "If upload fails: Press BOOT button and press RESET button",
+          "If screen doesn't turn on: Check version (V1/V2) and pin configuration",
+          "If WiFi fails: Verify SSID/password and signal strength"
+        ]
+      },
+      "esp_idf": {
+        "steps": [
+          "Open terminal in VS Code with ESP-IDF extension",
+          "Run 'idf.py set-target esp32s3'",
+          "Run 'idf.py fullclean'",
+          "Run 'idf.py build'",
+          "Run 'idf.py flash monitor' or 'idf.py flash' then open monitor",
+          "Press ENTER to start the application"
+        ],
+        "troubleshooting": [
+          "If build fails: Check sdkconfig and component dependencies",
+          "If flash fails: Verify board is in download mode (BOOT held + RESET)",
+          "If monitor doesn't show output: Check COM port and baud rate"
+        ]
+      }
+    }
+  },
+  "dependencies_and_libraries": {
+    "arduino_ide_libraries": {
+      "required": [
+        {
+          "library": "Arduino_GFX",
+          "repository": "https://github.com/moononournation/Arduino_GFX",
+          "version": "Latest",
+          "installation_method": "Sketch > Include Library > Manage Libraries",
+          "purpose": "Display graphics with QSPI support for AXS15231B"
+        },
+        {
+          "library": "LVGL",
+          "repository": "https://github.com/lvgl/lvgl",
+          "version": "8.3.0 (critical - newer versions may break forced rotation)",
+          "installation_method": "Library Manager or Git clone to libraries folder",
+          "purpose": "GUI framework for UI elements"
+        },
+        {
+          "library": "Arduino_JSON",
+          "repository": "https://github.com/bblanchon/ArduinoJson",
+          "version": "7.x",
+          "installation_method": "Library Manager",
+          "purpose": "Parse JSON responses from weather APIs"
+        },
+        {
+          "library": "Time",
+          "repository": "https://github.com/PaulStoffregen/Time",
+          "version": "Latest",
+          "installation_method": "Library Manager",
+          "purpose": "Time handling utilities"
+        },
+        {
+          "library": "NTPClient",
+          "repository": "https://github.com/colinjswilliams/Arduino-NTPClient",
+          "version": "Latest",
+          "installation_method": "Library Manager",
+          "purpose": "Time synchronization with NTP servers"
+        }
+      ],
+      "optional": [
+        {
+          "library": "WiFi",
+          "installation_method": "Built-in",
+          "purpose": "WiFi connectivity (pre-installed)"
+        },
+        {
+          "library": "HTTPClient",
+          "installation_method": "Built-in",
+          "purpose": "HTTP requests"
+        },
+        {
+          "library": "LittleFS",
+          "installation_method": "Built-in",
+          "purpose": "File system for offline assets"
+        }
+      ]
+    },
+    "esp_idf_components": {
+      "required": [
+        {
+          "component": "esp_lcd",
+          "path": "components/esp_lcd",
+          "version": "Built into ESP-IDF v4.4+",
+          "purpose": "LCD display driver framework"
+        },
+        {
+          "component": "esp_lcd_axs15231b",
+          "repository": "https://components.espressif.com/components/espressif/esp_lcd_axs15231b",
+          "version": "2.1.0",
+          "installation": "Add to component registry or clone to components/",
+          "purpose": "AXS15231B display driver specific implementation"
+        },
+        {
+          "component": "esp_lvgl_port",
+          "repository": "https://github.com/espressif/esp_lvgl_port",
+          "version": "Latest",
+          "installation": "Add as component or submodule",
+          "purpose": "LVGL integration layer for ESP32"
+        },
+        {
+          "component": "json",
+          "path": "components/json",
+          "version": "Built into ESP-IDF",
+          "purpose": "JSON parsing (cjson)"
+        },
+        {
+          "component": "esp_http_client",
+          "path": "components/esp_http_client",
+          "version": "Built into ESP-IDF",
+          "purpose": "HTTP client"
+        },
+        {
+          "component": "esp_tls",
+          "path": "components/esp_tls",
+          "version": "Built into ESP-IDF",
+          "purpose": "TLS/SSL support"
+        }
+      ],
+      "custom_component": {
+        "name": "weather_panel",
+        "description": "Custom component integrating WeatherPanel with display",
+        "structure": {
+          "weather_panel": {
+            "include": "weather_panel.h",
+            "source": "weather_panel.c",
+            "api": "api_weather_panel.c",
+            "satellite": "satellite_image.c",
+            "clock": "clock_display.c"
+          }
+        },
+        "dependencies": [
+          "esp_lcd_axs15231b",
+          "esp_lvgl_port",
+          "esp_http_client",
+          "json"
+        ]
+      }
+    },
+    "lvgl_configuration": {
+      "lv_conf_template": "lvgl/lv_conf_template.h",
+      "rename_to": "lv_conf.h",
+      "location": "Next to lvgl folder in libraries or components directory",
+      "critical_settings": {
+        "color_depth": 16,
+        "color_format": "LV_COLOR_FORMAT_LV_COLOR_FORMAT_L16",
+        "double_buffer": 0,
+        "rotated": 1,
+        "monitor_flush_cb": "Required for QSPI displays",
+        "mem_alloc": "Use PSRAM (ps_malloc)",
+        "tick_source": "millis()"
+      }
+    }
+  },
+  "configuration_guidelines": {
+    "weather_api_integration": {
+      "supported_apis": [
+        {
+          "name": "OpenWeatherMap",
+          "type": "Current weather + forecast",
+          "api_url": "https://api.openweathermap.org/data/2.5/",
+          "endpoints": {
+            "current_weather": "weather?lat={lat}&lon={lon}&appid={api_key}&units=metric",
+            "forecast": "forecast?lat={lat}&lon={lon}&appid={api_key}&units=metric",
+            "one_call": "onecall/v2.5?lat={lat}&lon={lon}&appid={api_key}&exclude=minutely,hourly&units=metric",
+            "weather_icon": "weather/img/{icon_code}.png"
+          },
+          "free_tier_limit": "1000 calls/day",
+          "registration": "https://home.openweathermap.org/users/sign_up",
+          "authentication": "API Key (APPID parameter)"
+        },
+        {
+          "name": "Open-Meteo",
+          "type": "Forecast weather",
+          "api_url": "https://api.open-meteo.com/v1/",
+          "endpoints": {
+            "forecast": "forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m",
+            "satellite": "Available via separate services"
+          },
+          "free_tier_limit": "10,000 calls/day (non-commercial)",
+          "registration": "None required",
+          "authentication": "None required (attribution required)"
+        },
+        {
+          "name": "WeatherAPI.com",
+          "type": "Current + forecast + astro",
+          "api_url": "https://api.weatherapi.com/v1/",
+          "endpoints": {
+            "current": "current.json?q={location}&aqi=yes",
+            "forecast": "forecast.json?q={location}&days=3&aqi=yes",
+            "astro": "astro.json?q={location}"
+          },
+          "free_tier_limit": "1 million calls/month",
+          "registration": "https://www.weatherapi.com/signup.aspx",
+          "authentication": "API Key header"
+        }
+      ],
+      "configuration_steps": [
+        "1. Register for API key (if required by chosen service)",
+        "2. Store API key securely (avoid hardcoding)",
+        "3. Configure location coordinates in code",
+        "4. Set update interval (recommend 15-60 minutes)",
+        "5. Implement error handling for API failures",
+        "6. Add fallback data display for offline mode"
+      ],
+      "code_example": {
+        "arduino": "// Configuration structure\nstruct WeatherConfig {\n  const char* ssid = \"YOUR_SSID\";\n  const char* password = \"YOUR_PASSWORD\";\n  const char* apiKey = \"YOUR_WEATHER_API_KEY\";\n  const float latitude = 37.7749;\n  const float longitude = -122.4194;\n  const int updateInterval = 3600; // 1 hour in seconds\n  const char* ntpServer = \"pool.ntp.org\";\n  const long timezoneOffset = -28800; // PST\n};\n\n// WiFi connection\nWiFi.begin(config.ssid, config.password);\nwhile (WiFi.status() != WL_CONNECTED) {\n  delay(500);\n}\n\n// Fetch weather data\nString url = String(\"http://api.openweathermap.org/data/2.5/weather?\") + \n             \"lat=\" + String(config.latitude) + \n             \"&lon=\" + String(config.longitude) + \n             \"&appid=\" + config.apiKey + \n             \"&units=metric\";\n\nHTTPClient http;\nhttp.begin(url);\nint statusCode = http.GET();\n\nif (statusCode == 200) {\n  String response = http.getString();\n  // Parse JSON with ArduinoJson\n  DynamicJsonDocument doc(1024);\n  DeserializationError error = deserializeJson(doc, response);\n  // Extract data\n  float temp = doc[\"main\"][\"temp\"];\n  int condition = doc[\"weather\"][0][\"id\"];\n}",
+        "esp_idf": "// HTTP client configuration\nesp_http_client_config_t http_config = {\n  .url = \"http://api.openweathermap.org/data/2.5/weather\",\n  .event_handler = _http_event_handler,\n  .buffer_size = 2048,\n  .buffer_size_tcp = 2048,\n};\n\nesp_http_client_handle_t http_client = esp_http_client_init(&http_config);\n\n// Set query parameters\nesp_http_client_set_method(http_client, HTTP_METHOD_GET);\nesp_http_client_set_header(http_client, \"Content-Type\", \"application/json\");\n\n// Execute request\nesp_http_client_perform(http_client);\nint response_code = esp_http_client_get_response_code(http_client);\n\nif (response_code == 200) {\n  int content_length = esp_http_client_get_content_length(http_client);\n  char* response_buffer = malloc(content_length + 1);\n  int read_bytes = esp_http_client_read(http_client, response_buffer, content_length);\n  response_buffer[read_bytes] = '\\0';\n  // Parse JSON using cjson\n  cJSON* json = cJSON_Parse(response_buffer);\n  // Extract temperature\n  cJSON* main = cJSON_GetObjectItem(json, \"main\");\n  cJSON* temp = cJSON_GetObjectItem(main, \"temp\");\n  float temperature = temp->valuedouble;\n  free(response_buffer);\n}\n\nesp_http_client_cleanup(http_client);"
+      }
+    },
+    "satellite_image_integration": {
+      "sources": [
+        {
+          "name": "Zoom.Earth",
+          "type": "Live satellite + radar",
+          "url_pattern": "https://zoom.earth/static/maps/sat/{lat}/{lon}/{zoom}.png",
+          "features": ["Real-time satellite", "Radar overlays", "Hurricane tracking"],
+          "attribution": "Required"
+        },
+        {
+          "name": "NOAA GFS",
+          "type": "Weather models",
+          "url_pattern": "https://nomads.ncdc.noaa.gov/thredds/dodsC/gfs/0p25/gfs{date}/gfs.t00z.pgrb2.0p25.f00.grib2",
+          "features": ["Global forecasts", "Multiple models", "Free access"],
+          "note": "Requires Grib2 library for parsing"
+        },
+        {
+          "name": "OpenWeatherMap Satellite",
+          "type": "Cloud coverage",
+          "url_pattern": "https://tile.openweathermap.org/map/cloud_new/{z}/{x}/{y}.png",
+          "features": ["Cloud layers", "Precipitation", "Pressure"],
+          "authentication": "API key required"
+        },
+        {
+          "name": "RADAR.LIVE",
+          "type": "Weather radar",
+          "url_pattern": "https://radar.live/radar.gif",
+          "features": ["Global radar", "Real-time precipitation"],
+          "attribution": "radar.live"
+        },
+        {
+          "name": "Custom Tile Server",
+          "type": "Self-hosted tiles",
+          "url_pattern": "http://your-server/tiles/{z}/{x}/{y}.png",
+          "features": ["Complete control", "No rate limits", "Self-hosted"],
+          "note": "Requires backend tile server"
+        }
+      ],
+      "image_handling": {
+        "download_method": "HTTP GET request to image URL",
+        "storage": "PSRAM or MicroSD for caching",
+        "resize_options": [
+          "Use ESP32 image decoder (JPEG)",
+          "Pre-resize images on server",
+          "Use LVGL built-in image scaling"
+        ],
+        "format_support": {
+          "supported": ["JPEG", "PNG", "BMP"],
+          "recommended": "JPEG (smaller file size)"
+        }
+      },
+      "integration_code": {
+        "arduino": "// Download and display satellite image\nvoid downloadSatelliteImage(const char* imageUrl) {\n  HTTPClient http;\n  http.begin(imageUrl);\n  int contentType = http.getHeader(\"Content-Type\");\n  \n  if (http.GET() > 0) {\n    // Check if response is image\n    if (contentType == 0 || String(contentType).indexOf(\"image/jpeg\") >= 0) {\n      // Get image data\n      size_t len = http.getSize();\n      uint8_t* imgData = (uint8_t*)ps_malloc(len);\n      \n      WiFiClient* stream = http.getStreamPtr();\n      size_t offset = 0;\n      while (http.connected() && offset < len) {\n        size_t toRead = stream->available();\n        size_t bytesRead = stream->read(imgData + offset, toRead);\n        offset += bytesRead;\n      }\n      \n      // Display image using Arduino_GFX\n      gfx->drawJpg(imgData, offset, 0, 0);\n      free(imgData);\n    }\n  }\n  http.end();\n}",
+        "esp_idf": "// ESP-IDF satellite image download\nstatic esp_err_t http_event_handler(esp_http_client_event_t* evt) {\n  switch (evt->event_id) {\n    case HTTP_EVENT_DATA:\n      if (evt->data_len > 0) {\n        // Write image data to buffer\n        esp_lcd_panel_draw_bitmap(panel, 0, 0, evt->data, evt->data_len);\n      }\n      break;\n    case HTTP_EVENT_ERROR:\n      ESP_LOGE(TAG, \"HTTP error occurred\");\n      break;\n    case HTTP_EVENT_POST_CHUNKED:\n      ESP_LOGI(TAG, \"Image download complete\");\n      break;\n  }\n  return ESP_OK;\n}\n\n// Initialize HTTP client for image download\nesp_http_client_config_t config = {\n  .url = satelliteImageUrl,\n  .event_handler = http_event_handler,\n  .buffer_size = 4096,\n  .buffer_size_tcp = 4096,\n};\n\nesp_http_client_handle_t client = esp_http_client_init(&config);\nesp_http_client_perform(client);\nesp_http_client_cleanup(client);"
+      }
+    },
+    "local_weather_data": {
+      "local_sensor_options": [
+        {
+          "sensor": "BME280",
+          "interface": "I2C or SPI",
+          "measurements": ["Temperature", "Humidity", "Pressure"],
+          "wire_protocol": "Wire.begin(SDA, SCL)"
+        },
+        {
+          "sensor": "AHT20",
+          "interface": "I2C",
+          "measurements": ["Temperature", "Humidity"],
+          "wire_protocol": "Wire.begin(SDA, SCL)"
+        },
+        {
+          "sensor": "SHT31",
+          "interface": "I2C",
+          "measurements": ["Temperature", "Humidity"],
+          "wire_protocol": "Wire.begin(SDA, SCL)"
+        }
+      ],
+      "integration_approach": {
+        "step_1": "Read local sensors via I2C/SPI",
+        "step_2": "Combine with weather API data",
+        "step_3": "Display indoor/outdoor conditions",
+        "step_4": "Calculate comfort indices (heat index, dew point)"
+      }
+    },
+    "wifi_configuration": {
+      "ssid_password_storage": {
+        "option_1": "Direct in code (not recommended for production)",
+        "option_2": "Config file on MicroSD",
+        "option_3": "ESP32 NVS (Non-Volatile Storage)",
+        "option_4": "WiFi provisioning mode (soft-AP)"
+      },
+      "nvs_storage_example": {
+        "arduino": "// Store WiFi credentials in NVS\nvoid saveWifiCredentials(const char* ssid, const char* password) {\n  nvs_open(\"storage\", NVS_READWRITE, &handle);\n  nvs_set_str(handle, \"ssid\", ssid);\n  nvs_set_str(handle, \"password\", password);\n  nvs_commit(handle);\n  nvs_close(handle);\n}\n\n// Retrieve WiFi credentials\nvoid loadWifiCredentials() {\n  nvs_open(\"storage\", NVS_READONLY, &handle);\n  char ssid[32];\n  char password[64];\n  size_t ssid_len = sizeof(ssid);\n  size_t password_len = sizeof(password);\n  nvs_get_str(handle, \"ssid\", ssid, &ssid_len);\n  nvs_get_str(handle, \"password\", password, &password_len);\n  // Use credentials\n  WiFi.begin(ssid, password);\n  nvs_close(handle);\n}",
+        "esp_idf": "// Store credentials using NVS\nnvs_handle_t nvs_handle;\nnvs_open(\"storage\", NVS_READWRITE, &nvs_handle);\nnvs_set_str(nvs_handle, \"ssid\", ssid);\nnvs_set_str(nvs_handle, \"password\", password);\nnvs_commit(nvs_handle);\nnvs_close(nvs_handle);\n\n// Retrieve credentials\nnvs_open(\"storage\", NVS_READONLY, &nvs_handle);\nnvs_get_str(nvs_handle, \"ssid\", ssid_buffer, &ssid_len);\nnvs_get_str(nvs_handle, \"password\", password_buffer, &password_len);\nnvs_close(nvs_handle);"
+      },
+      "connection_retry": {
+        "strategy": "Exponential backoff with maximum retries",
+        "timeout": "30 seconds per attempt",
+        "max_retries": 10
+      }
+    },
+    "clock_synchronization": {
+      "ntp_configuration": {
+        "servers": [
+          "pool.ntp.org",
+          "time.google.com",
+          "time.cloudflare.com"
+        ],
+        "timezone": "Configure via IANA timezone database",
+        "update_frequency": "Every hour or on connection"
+      },
+      "rtc_backup": {
+        "onboard_rtc": "PCF85063 RTC chip",
+        "backup_method": "Save time to RTC on power loss",
+        "restore_method": "Load time from RTC on boot, sync with NTP if available"
+      }
+    }
+  },
+  "troubleshooting": {
+    "common_issues": [
+      {
+        "issue": "Display not turning on",
+        "causes": [
+          "Incorrect version (V1/V2) firmware mismatch",
+          "Backlight pin wrong for version",
+          "Display not initialized before LVGL",
+          "Power supply insufficient"
+        ],
+        "solutions": [
+          "Verify board version (check silkscreen or QC label)",
+          "Use V1 or V2 specific firmware examples",
+          "Check backlight pin configuration (LCD_BL)",
+          "Ensure display init before lv_init()",
+          "Verify USB cable provides adequate power (5V, 2A+)"
+        ],
+        "version_specific": {
+          "v1": "Use V1 example firmware",
+          "v2": "Use V2 example firmware with updated pin mapping"
+        }
+      },
+      {
+        "issue": "Touch not responding",
+        "causes": [
+          "I2C address conflict",
+          "Touch controller not initialized",
+          "Touch calibration required",
+          "I2C bus speed too high"
+        ],
+        "solutions": [
+          "Check I2C scan for touch controller (address 0x3B)",
+          "Verify I2C pins (SDA=GPIO4, SCL=GPIO8)",
+          "Run touch calibration routine",
+          "Reduce I2C speed to 100kHz if unstable",
+          "Check TP_INT pin connection (V2 only)"
+        ]
+      },
+      {
+        "issue": "WiFi connection fails",
+        "causes": [
+          "Incorrect SSID/password",
+          "Weak signal strength",
+          "2.4GHz channel interference",
+          "MAC address conflict"
+        ],
+        "solutions": [
+          "Verify SSID and password in code",
+          "Check signal strength (rssi) in Serial Monitor",
+          "Move closer to router",
+          "Try different WiFi channel",
+          "Reset network settings and reconfigure",
+          "Check router MAC filtering settings"
+        ]
+      },
+      {
+        "issue": "API data not updating",
+        "causes": [
+          "API rate limit exceeded",
+          "Invalid API key",
+          "Network timeout",
+          "JSON parsing errors"
+        ],
+        "solutions": [
+          "Check API key validity and quota",
+          "Implement retry logic with exponential backoff",
+          "Increase timeout values (recommend 10-30 seconds)",
+          "Add error logging for API responses",
+          "Cache last known data for offline mode",
+          "Test API endpoint in browser first"
+        ]
+      },
+      {
+        "issue": "Memory allocation errors",
+        "causes": [
+          "PSRAM not initialized",
+          "LVGL memory too large",
+          "Image too big for buffer",
+          "Memory fragmentation"
+        ],
+        "solutions": [
+          "Verify PSRAM configuration in board settings",
+          "Reduce LVGL buffer size (recommend 16-64KB)",
+          "Resize images before display",
+          "Use PSRAM for large allocations (ps_malloc)",
+          "Implement memory monitoring",
+          "Clear unused images from buffer"
+        ],
+        "memory_check": "Use esp_psram_is_init() or Serial.println(ESP.getFreeHeap())"
+      },
+      {
+        "issue": "Images not displaying correctly",
+        "causes": [
+          "Image format not supported",
+          "Image too large",
+          "Resolution mismatch",
+          "Corrupted image data"
+        ],
+        "solutions": [
+          "Use JPEG format for best compatibility",
+          "Resize images to display resolution (172x640 or scaled)",
+          "Pre-process images to correct aspect ratio",
+          "Verify image URL accessibility",
+          "Download and cache images locally"
+        ]
+      },
+      {
+        "issue": "Compilation errors with Arduino_GFX",
+        "causes": [
+          "LVGL version mismatch",
+          "Missing dependencies",
+          "Outdated Arduino_GFX library"
+        ],
+        "solutions": [
+          "Install LVGL 8.3.0 exactly",
+          "Update Arduino_GFX to latest version",
+          "Check library dependencies",
+          "Clean project and rebuild",
+          "Verify lv_conf.h is correctly placed"
+        ]
+      }
+    ],
+    "debugging_resources": [
+      {
+        "resource": "Serial Monitor Output",
+        "usage": "Enable debug prints in code",
+        "baud_rate": "115200",
+        "useful_logs": [
+          "WiFi connection status",
+          "API response codes",
+          "Memory allocation status",
+          "Display initialization errors",
+          "Touch calibration results"
+        ]
+      },
+      {
+        "resource": "ESP32 Developer Guide",
+        "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/",
+        "topics": [
+          "Hardware debugging",
+          "Memory management",
+          "WiFi troubleshooting",
+          "Power management"
+        ]
+      },
+      {
+        "resource": "LVGL Documentation",
+        "url": "https://docs.lvgl.io/",
+        "topics": [
+          "Display drivers",
+          "Touch input handling",
+          "Memory optimization",
+          "Custom widgets"
+        ]
+      },
+      {
+        "resource": "Arduino_GFX Examples",
+        "url": "https://github.com/moononournation/Arduino_GFX/tree/master/examples",
+        "relevant_examples": [
+          "LVGL/LvglHelloWorld",
+          "LVGL/LvglBenchmark",
+          "Display drivers for AXS15231B"
+        ]
+      },
+      {
+        "resource": "Waveshare Documentation",
+        "url": "https://docs.waveshare.com/ESP32-S3-Touch-LCD-3.49",
+        "topics": [
+          "Hardware specifications",
+          "Pinout reference",
+          "Example projects",
+          "Schematic diagrams"
+        ]
+      }
+    ],
+    "error_codes": {
+      "wifi": {
+        "WL_CONNECT_FAILED": "10 - Connection timeout",
+        "WL_NO_SSID_AVAIL": "1 - No network found",
+        "WL_DISCONNECTED": "4 - Disconnected",
+        "WL_STATION_FAIL": "2 - Authentication failed",
+        "WL_NO_SHIELD": "0 - WiFi not available"
+      },
+      "http": {
+        "HTTP_CODE_OK": "200 - Success",
+        "HTTP_CODE_BAD_REQUEST": "400 - Invalid request",
+        "HTTP_CODE_UNAUTHORIZED": "401 - Invalid API key",
+        "HTTP_CODE_FORBIDDEN": "403 - Rate limited",
+        "HTTP_CODE_NOT_FOUND": "404 - Resource not found"
+      },
+      "esp_idf": {
+        "ESP_OK": "0 - Success",
+        "ESP_ERR_INVALID_ARG": "-122 - Invalid argument",
+        "ESP_ERR_NO_MEM": "-5 - Out of memory",
+        "ESP_ERR_NOT_FOUND": "-1003 - Resource not found",
+        "ESP_ERR_TIMEOUT": "-1006 - Operation timed out"
+      }
+    }
+  },
+  "documentation_sources": {
+    "hardware_documentation": [
+      {
+        "title": "ESP32-S3-Touch-LCD-3.49 Datasheet",
+        "url": "https://docs.waveshare.com/ESP32-S3-Touch-LCD-3.49",
+        "topics": [
+          "Hardware specifications",
+          "Pin definitions",
+          "Mechanical dimensions",
+          "Electrical characteristics"
+        ]
+      },
+      {
+        "title": "ESP32-S3-Touch-LCD-3.49 Schematics",
+        "url": "https://docs.waveshare.com/ESP32-S3-Touch-LCD-3.49/Resources-And-Documents",
+        "topics": [
+          "V1 Schematic",
+          "V2 Schematic",
+          "Circuit diagrams"
+        ]
+      },
+      {
+        "title": "ESP32-S3 Technical Reference Manual",
+        "url": "https://www.espressif.com/en/support/documents/technical-documents",
+        "topics": [
+          "CPU architecture",
+          "Peripheral interfaces",
+          "Memory map",
+          "Power management"
+        ]
+      },
+      {
+        "title": "AXS15231B Display Driver Datasheet",
+        "url": "https://docs.waveshare.com/ESP32-S3-Touch-LCD-3.49/Resources-And-Documents",
+        "topics": [
+          "QSPI interface",
+          "Command set",
+          "Timing specifications"
+        ]
+      }
+    ],
+    "software_documentation": [
+      {
+        "title": "ESP-IDF Programming Guide",
+        "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/",
+        "topics": [
+          "Getting started",
+          "Components",
+          "Build system",
+          "Debugging"
+        ]
+      },
+      {
+        "title": "Arduino IDE Documentation",
+        "url": "https://www.arduino.cc/reference/en/",
+        "topics": [
+          "Board management",
+          "Library installation",
+          "Sketch structure"
+        ]
+      },
+      {
+        "title": "LVGL Documentation",
+        "url": "https://docs.lvgl.io/",
+        "topics": [
+          "Getting started",
+          "Widgets",
+          "Themes",
+          "Porting to ESP32"
+        ]
+      },
+      {
+        "title": "Arduino_GFX Library Documentation",
+        "url": "https://github.com/moononournation/Arduino_GFX",
+        "topics": [
+          "Installation",
+          "Display drivers",
+          "Examples",
+          "API reference"
+        ]
+      },
+      {
+        "title": "WeatherPanel GitHub Repository",
+        "url": "https://github.com/moononournation/WeatherPanel",
+        "topics": [
+          "Project structure",
+          "Configuration",
+          "Examples"
+        ]
+      }
+    ],
+    "api_documentation": [
+      {
+        "title": "OpenWeatherMap API Documentation",
+        "url": "https://openweathermap.org/api",
+        "topics": [
+          "Current weather",
+          "Forecast",
+          "One Call API",
+          "Weather icons"
+        ]
+      },
+      {
+        "title": "Open-Meteo API Documentation",
+        "url": "https://open-meteo.com/en/docs",
+        "topics": [
+          "Forecast endpoints",
+          "Weather models",
+          "Historical data",
+          "Parameters"
+        ]
+      },
+      {
+        "title": "WeatherAPI.com Documentation",
+        "url": "https://www.weatherapi.com/docs.aspx",
+        "topics": [
+          "Current weather",
+          "Forecast",
+          "Astronomy",
+          "Geocoding"
+        ]
+      }
+    ],
+    "tutorials": [
+      {
+        "title": "Live Weather Satellite Image Clock - Instructables",
+        "url": "https://www.instructables.com/Live-Weather-Satellite-Image-Clock/",
+        "author": "moononournation",
+        "topics": [
+          "Project overview",
+          "Setup guide",
+          "Configuration"
+        ]
+      },
+      {
+        "title": "ESP32 Weather Dashboard Tutorial",
+        "url": "https://www.instructables.com/ESP32-Weather-Dashboard-With-Satellite-Maps-and-16/",
+        "topics": [
+          "Satellite maps integration",
+          "Weather forecasts",
+          "UI design"
+        ]
+      },
+      {
+        "title": "LVGL on ESP32 Tutorial",
+        "url": "https://docs.lvgl.io/master/get-started/espressif.html",
+        "topics": [
+          "LVGL setup",
+          "Display driver",
+          "Touch input"
+        ]
+      }
+    ]
+  },
+  "optimization_tips": {
+    "power_consumption": {
+      "strategies": [
+        {
+          "strategy": "Display backlight control",
+          "description": "Reduce backlight brightness when not in active use",
+          "implementation": "PWM control via GPIO 1",
+          "power_savings": "30-50% display power reduction",
+          "code_example": "// Dim backlight to 30%\nledcSetup(0, 5000, 8);\nledcAttachPin(TFT_BL, 0);\nledcWrite(0, 77); // 30% of 255"
+        },
+        {
+          "strategy": "Sleep mode between updates",
+          "description": "Enter deep sleep when not updating weather data",
+          "implementation": "WiFi.disconnect() + esp_deep_sleep_enable_timer()",
+          "power_savings": "95%+ power reduction during sleep",
+          "wake_up": "Timer wake or manual button press"
+        },
+        {
+          "strategy": "WiFi power management",
+          "description": "Disable WiFi when not fetching data",
+          "implementation": "WiFi.mode(WIFI_OFF) between updates",
+          "power_savings": "50-100mA reduction",
+          "consideration": "Requires reconnection on wake"
+        },
+        {
+          "strategy": "Reduce update frequency",
+          "description": "Minimize API calls and network activity",
+          "recommendation": "Update every 1-24 hours based on needs",
+          "power_savings": "Linear with frequency reduction"
+        },
+        {
+          "strategy": "Use local caching",
+          "description": "Store weather data and images locally",
+          "implementation": "Save to LittleFS or PSRAM",
+          "power_savings": "Reduces network activity"
+        }
+      ],
+      "battery_operation": {
+        "recommended_battery": "18650 Li-ion (2600-3500mAh) or LiPo (2000-4000mAh)",
+        "estimated_runtime": {
+          "with_displays_on": "4-8 hours (continuous operation)",
+          "with_periodic_updates": "1-3 days (hourly updates)",
+          "with_deep_sleep": "1-2 weeks (daily updates + sleep)"
+        },
+        "charging": {
+          "circuit": "Onboard PCF85063 charging IC",
+          "input": "USB Type-C or external 5V",
+          "battery_protection": "Built-in overcharge/overdischarge protection"
+        }
+      }
+    },
+    "image_optimization": {
+      "size_reduction": [
+        {
+          "technique": "Resize to display resolution",
+          "target_size": "172x640 pixels (full) or smaller sections",
+          "scaling_algorithm": "Bilinear or bicubic interpolation"
+        },
+        {
+          "technique": "Use JPEG compression",
+          "quality_setting": "60-80% for best balance",
+          "size_reduction": "10-50x smaller than PNG"
+        },
+        {
+          "technique": "Optimize color palette",
+          "approach": "Use 8-bit indexed colors where possible",
+          "tools": "ImageMagick, GIMP, or online optimizers"
+        },
+        {
+          "technique": "Cache downloaded images",
+          "storage": "Save to LittleFS or MicroSD",
+          "benefit": "Avoid repeated downloads"
+        }
+      ],
+      "display_optimization": {
+        "lvgl_image_cache": "Enable LVGL image cache for repeated displays",
+        "partial_refresh": "Update only changed areas (if supported)",
+        "buffer_management": "Use double buffering for smooth updates"
+      }
+    },
+    "performance_optimization": {
+      "memory_management": [
+        {
+          "technique": "Use PSRAM for large allocations",
+          "code": "uint8_t* buffer = (uint8_t*)ps_malloc(size);",
+          "benefit": "Access 8MB PSRAM vs 512KB internal SRAM"
+        },
+        {
+          "technique": "Minimize heap fragmentation",
+          "approach": "Allocate large buffers at startup",
+          "benefit": "Prevents fragmentation over time"
+        },
+        {
+          "technique": "Free unused resources",
+          "code": "free(buffer); buffer = nullptr;",
+          "benefit": "Reclaims memory for future allocations"
+        },
+        {
+          "technique": "LVGL memory optimization",
+          "settings": {
+            "LV_MEM_SIZE": "32-64KB",
+            "LV_DISP_DEF_REFR_PERIOD": "50-100ms",
+            "LV_COLOR_DEPTH": "16 (2 bytes per pixel)"
+          }
+        }
+      ],
+      "display_performance": [
+        {
+          "technique": "Use QSPI at max speed",
+          "speed": "40-80MHz",
+          "benefit": "Faster image updates"
+        },
+        {
+          "technique": "Double buffering",
+          "implementation": "LVGL with double-buffered draw buffer",
+          "benefit": "Eliminates screen tearing"
+        },
+        {
+          "technique": "Optimize refresh rate",
+          "recommendation": "30-60Hz refresh",
+          "tradeoff": "Higher refresh = smoother but more power"
+        }
+      ],
+      "wifi_optimization": [
+        {
+          "technique": "Connection pooling",
+          "benefit": "Reuse TCP connections"
+        },
+        {
+          "technique": "Compress requests/responses",
+          "implementation": "Use gzip encoding",
+          "benefit": "Smaller data transfer"
+        },
+        {
+          "technique": "Batch API calls",
+          "benefit": "Fewer connections, reduced overhead"
+        }
+      ]
+    },
+    "code_optimization": {
+      "arduino": {
+        "avoid": [
+          "String concatenation in loops",
+          "Unnecessary object creation",
+          "Blocking delays (use millis() instead)"
+        ],
+        "use": [
+          "String.c_str() for C-strings",
+          "Static variables where possible",
+          "Non-blocking timing with millis()"
+        ]
+      },
+      "esp_idf": {
+        "avoid": [
+          "malloc/free in hot loops",
+          "Blocking API calls without timeout",
+          "Large stack allocations"
+        ],
+        "use": [
+          "Memory pools for frequent allocations",
+          "Non-blocking async APIs",
+          "Static allocation when possible"
+        ]
+      }
+    }
+  },
+  "implementation_checklist": {
+    "hardware_setup": [
+      "✓ Verify ESP32-S3-Touch-LCD-3.49 version (V1 or V2)",
+      "✓ Connect USB power supply (5V, 2A+ recommended)",
+      "✓ (Optional) Install MicroSD card",
+      "✓ (Optional) Connect external antenna via IPEX",
+      "✓ Verify display shows boot logo",
+      "✓ Check touch response on boot screen"
+    ],
+    "software_installation": [
+      "✓ Install Arduino IDE 2.0+ or ESP-IDF v5.2+",
+      "✓ Add ESP32 board manager URL",
+      "✓ Install ESP32 board package",
+      "✓ Configure board settings (16MB Flash, 8MB PSRAM)",
+      "✓ Install required libraries (Arduino_GFX, LVGL 8.3.0, Arduino_JSON)",
+      "✓ Copy lv_conf.h to correct location",
+      "✓ Clone or download WeatherPanel repository"
+    ],
+    "configuration": [
+      "✓ Configure WiFi SSID and password",
+      "✓ Obtain weather API key (OpenWeatherMap, Open-Meteo, or WeatherAPI)",
+      "✓ Set location coordinates (latitude/longitude)",
+      "✓ Configure update interval",
+      "✓ Set timezone for accurate clock",
+      "✓ Configure backlight brightness"
+    ],
+    "testing": [
+      "✓ Verify WiFi connection",
+      "✓ Test weather API data retrieval",
+      "✓ Test image download and display",
+      "✓ Verify touch functionality",
+      "✓ Test clock synchronization with NTP",
+      "✓ Check memory usage (ESP.getFreeHeap())",
+      "✓ Test update cycle and sleep mode"
+    ],
+    "troubleshooting": [
+      "✓ Enable debug output (Serial Monitor)",
+      "✓ Monitor API response codes",
+      "✓ Check for memory allocation errors",
+      "✓ Test with different API endpoints",
+      "✓ Verify version-specific settings",
+      "✓ Check pin configuration for display version"
+    ],
+    "deployment": [
+      "✓ Remove debug output for production",
+      "✓ Store credentials securely (NVS or external config)",
+      "✓ Set optimal update intervals",
+      "✓ Configure power-saving modes",
+      "✓ Test long-term operation",
+      "✓ Document configuration for backup"
+    ]
+  },
+  "timeline_estimate": {
+    "hardware_preparation": "1-2 hours",
+    "software_installation": "1-2 hours",
+    "configuration_and_testing": "2-4 hours",
+    "troubleshooting": "2-6 hours (depending on issues)",
+    "optimization": "2-4 hours",
+    "total_estimated_time": "8-18 hours for first-time setup"
+  },
+  "final_notes": {
+    "important_considerations": [
+      "WeatherPanel integration with ESP32-S3-Touch-LCD-3.49 requires careful version matching (V1/V2)",
+      "LVGL 8.3.0 is critical - newer versions may break forced software rotation",
+      "API rate limits should be considered for production deployments",
+      "Consider offline fallback for critical weather displays",
+      "Power consumption is significant - plan for appropriate power supply",
+      "PSRAM is essential for displaying images alongside LVGL UI"
+    ],
+    "recommended_next_steps": [
+      "1. Start with official Waveshare examples to verify hardware",
+      "2. Implement basic WiFi connection and NTP time sync",
+      "3. Test single weather API integration",
+      "4. Add satellite image display",
+      "5. Integrate full WeatherPanel codebase",
+      "6. Optimize power consumption",
+      "7. Test long-term stability"
+    ],
+    "support_resources": [
+      "Waveshare Forum: https://www.waveshare.com/wiki/ESP32-S3-Touch-LCD-3.49",
+      "ESP32 Community: https://esp32.com/",
+      "LVGL Forum: https://forum.lvgl.io/",
+      "Arduino Forum: https://forum.arduino.cc/",
+      "GitHub Issues: Check repository for reported issues and solutions"
+    ]
+  }
+}

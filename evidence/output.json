@@ -1,0 +1,104 @@
+{
+  "summary": {
+    "what_i_did": [
+      "Researched Waveshare ESP32-S3-Touch-LCD-3.49 specifications and documentation",
+      "Analyzed AXS15231B display controller datasheet and integration requirements",
+      "Identified V1 vs V2 board differences and GPIO pin mapping changes",
+      "Created comprehensive embedded development guide for the display",
+      "Documented QSPI display interface configuration",
+      "Documented I2C touch controller integration",
+      "Provided sample ESP-IDF code for initialization and touch handling",
+      "Compiled troubleshooting resources and debugging techniques",
+      "Listed official and community documentation sources"
+    ],
+    "what_i_found": {
+      "hardware_summary": {
+        "display_controller": "AXS15231B (integrated LCD + touch controller)",
+        "display_interface": "QSPI (Quad SPI)",
+        "touch_interface": "I2C",
+        "resolution": "172 x 640 pixels (portrait orientation)",
+        "panel_type": "IPS LCD, 16.7M colors, 350 cd/m² brightness",
+        "psram": "8 MB octal PSRAM",
+        "flash": "16 MB QSPI NOR Flash",
+        "onboard_components": ["TCA9554PWR I2C GPIO expander", "PCF85063 RTC chip", "QMI8658 6-axis IMU", "ES8311 ES7210 audio codecs"]
+      },
+      "version_differences": {
+        "v1_discontinued": "Ships switched to V2 after June 8, 2026",
+        "v2_identification": "Rev1.1 silkscreen on PCB, V2 QC sticker on case",
+        "pin_swaps": {
+          "LCD_TE": "V1: GPIO1 -> V2: GPIO2",
+          "LCD_RESET": "V1: GPIO3 -> V2: GPIO4",
+          "LCD_BL": "V1: GPIO32 -> V2: GPIO46",
+          "EXIO_INT": "V1: GPIO46 -> V2: GPIO32",
+          "TP_int": "V1: Internal -> V2: Exposed (GPIO1)"
+        }
+      },
+      "qspi_pins": {
+        "CS": "GPIO45",
+        "CLK": "GPIO47",
+        "D0": "GPIO39",
+        "D1": "GPIO40",
+        "D2": "GPIO48",
+        "D3": "GPIO21"
+      },
+      "i2c_touch_pins": {
+        "SDA": "GPIO4",
+        "SCL": "GPIO8",
+        "INT": "GPIO1 (V2 only)",
+        "address": "0x28 (typical)"
+      },
+      "firmware_requirements": {
+        "esp_idf_minimum_version": "V5.5.3",
+        "psram_config": "8MB octal at 80MHz",
+        "lvgl_versions": "v8.4.0 or v9.3.0"
+      },
+      "sample_code_provided": [
+        "Complete ESP-IDF project structure",
+        "Display initialization with QSPI configuration",
+        "AXS15231B initialization command sequence",
+        "I2C touch controller setup and interrupt handling",
+        "Touch data reading and parsing",
+        "LVGL integration code snippets",
+        "Error recovery functions"
+      ],
+      "troubleshooting_coverage": [
+        "Display noise/static issues",
+        "Touch not responding",
+        "Backlight problems",
+        "GPIO conflicts",
+        "QSPI communication errors",
+        "I2C address detection",
+        "Debug tools and techniques"
+      ],
+      "documentation_sources": [
+        "Waveshare official documentation (docs.waveshare.com)",
+        "AXS15231B datasheet",
+        "ESP-IDF official documentation",
+        "Community repositories (ESPHome, LVGL forum)",
+        "CNX Software review article",
+        "TechPad unified firmware guide"
+      ]
+    },
+    "files_created": [
+      {
+        "path": "/home/andyfied/src/workstation/ESP32-S3-Touch-LCD-3.49_GUIDE.md",
+        "size": "28152 bytes",
+        "description": "Comprehensive development guide covering all 5 requested areas"
+      }
+    ],
+    "issues_encountered": [
+      "Limited public documentation for AXS15231B controller (only preliminary datasheet available)",
+      "No exact V1/V2 GPIO pinout documented in a single source - compiled from multiple resources",
+      "Community issues show common problems with initialization sequences that were addressed in the guide",
+      "Some forum posts indicate display static issues with incorrect QSPI configurations"
+    ],
+    "key_recommendations": [
+      "Use ESP-IDF v5.5.3 or compatible version",
+      "Always verify V1 vs V2 before flashing firmware (wrong backlight pin = no backlight)",
+      "Start QSPI clock at 10MHz, increase only if stable",
+      "Use TCA9554 GPIO expander carefully - toggling pin 1 can disable backlight on some revisions",
+      "Consider using LVGL v8.4.0 for most stable driver support",
+      "Always verify PSRAM initialization before display init"
+    ]
+  }
+}
